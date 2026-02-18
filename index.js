@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) FOR ZIMON - Fixed
+//  Z-GEN X (PAI EDITION) - V2.0 FINAL
 // ==========================================
 
 const { 
@@ -20,29 +20,26 @@ const {
 } = require('discord.js');
 const axios = require('axios');
 const express = require('express');
+const translate = require('translate-google'); // วุ้นแปลภาษา
 
-// --- 1. ดึงค่าจาก Railway Variables (ห้ามแก้ตรงนี้) ---
+// --- 1. ดึงค่าจาก Railway Variables ---
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = process.env.CLIENT_ID; 
 const OWNER_ID = process.env.OWNER_ID; 
 
-// ตรวจสอบว่าใส่ค่าครบไหม ถ้าไม่ครบจะแจ้งเตือนใน Log
 if (!TOKEN || !CLIENT_ID || !OWNER_ID) {
-    console.error("❌ Error: ซีม่อนลืมใส่ Variables ใน Railway ค่ะ! (ต้องใส่ TOKEN, CLIENT_ID, OWNER_ID)");
+    console.error("❌ Error: ลืมใส่ Variables (TOKEN, CLIENT_ID, OWNER_ID) ใน Railway ค่ะ!");
     process.exit(1); 
 }
 
-// --- 2. ระบบกันหลับ (Keep Alive) ---
+// --- 2. ระบบกันหลับ ---
 const app = express();
 app.get('/', (req, res) => res.send('Z-Gen X System is Online for Zimon! 💖'));
 app.listen(process.env.PORT || 3000, () => console.log('✅ Web Server Ready!'));
 
 // --- 3. สร้างตัวบอท ---
 const client = new Client({
-    intents: [
-        GatewayIntentBits.Guilds, 
-        GatewayIntentBits.DirectMessages
-    ],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
     partials: [Partials.Channel]
 });
 
@@ -50,7 +47,7 @@ const client = new Client({
 const commands = [
     new SlashCommandBuilder()
         .setName('pai_secret') 
-        .setDescription('เปิดแผงควบคุม Z-Gen X ลับเฉพาะซีม่อน')
+        .setDescription('เสก Panel ค้นหารูป (เฉพาะซีม่อนสั่งได้ - สมาชิกกดใช้ได้)')
 ]
     .map(command => command.toJSON());
 
@@ -58,55 +55,52 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 
 // --- 5. เริ่มทำงาน ---
 client.once('ready', async () => {
-    console.log(`✨ น้องปายพร้อมทำงานแล้วค่ะ! ล็อกอินในชื่อ: ${client.user.tag}`);
-    
+    console.log(`✨ น้องปาย V2 พร้อมทำงาน! ล็อกอิน: ${client.user.tag}`);
     try {
-        console.log('⏳ กำลังลงทะเบียนคำสั่ง...');
-        await rest.put(
-            Routes.applicationCommands(CLIENT_ID),
-            { body: commands },
-        );
-        console.log('✅ ลงทะเบียนคำสั่งเรียบร้อย! ใช้ /pai_secret ได้เลย');
+        await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
+        console.log('✅ ลงทะเบียนคำสั่งเรียบร้อย!');
     } catch (error) {
         console.error('❌ ลงทะเบียนคำสั่งพลาด:', error);
     }
 });
 
-// --- 6. จัดการคำสั่งและปุ่ม ---
+// --- 6. จัดการ Interaction ---
 client.on('interactionCreate', async interaction => {
     
-    // --- คำสั่ง /pai_secret ---
+    // ====================================================
+    // 🟢 ส่วนที่ 1: คำสั่งเรียก Panel (เฉพาะซีม่อนใช้ได้)
+    // ====================================================
     if (interaction.isChatInputCommand()) {
         if (interaction.commandName === 'pai_secret') {
             
-            // เช็ค ID ซีม่อน (ถ้าไม่ใช่ซีม่อน ห้ามใช้!)
+            // เช็คว่าเป็นซีม่อนไหม (คนเสก Panel ต้องเป็นซีม่อน)
             if (interaction.user.id !== OWNER_ID) {
                 return interaction.reply({ 
-                    content: '🚫 ขอโทษนะคะ! ระบบนี้ล็อคไว้ให้ **ซีม่อน** คนเดียวค่ะ!', 
+                    content: '🚫 คำสั่งนี้สำหรับ **ซีม่อน** เท่านั้นค่ะ!', 
                     ephemeral: true 
                 });
             }
 
             const embed = new EmbedBuilder()
-                .setTitle('💋 Z-GEN X CONTROL PANEL')
-                .setDescription('**ยินดีต้อนรับค่ะซีม่อน...**\nเลือกโหมดที่ต้องการด้านล่างได้เลย\n(ระบบจะส่งรูปเข้า DM ส่วนตัวนะคะ)')
-                .setColor('#FF0099') 
-                .setThumbnail(client.user.displayAvatarURL())
-                .setFooter({ text: 'Service by น้องปาย' });
+                .setTitle('💋 Z-GEN X PUBLIC PANEL')
+                .setDescription('**บริการค้นหารูป Anime & Secret Zone**\n\n👇 **วิธีใช้งานสำหรับสมาชิก:**\n1. เลือกโหมดที่ต้องการในเมนูด้านล่าง\n2. บอทจะส่งปุ่มกดให้ท่าน (เห็นแค่คนเดียว)\n3. กดปุ่มและกรอกชื่อตัวละคร (ไทย/อังกฤษ ก็ได้)')
+                .setColor('#FF0099')
+                .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif')
+                .setFooter({ text: 'Service by น้องปาย | ใช้ได้ทุกคน' });
 
             const selectMenu = new StringSelectMenuBuilder()
                 .setCustomId('mode_select')
-                .setPlaceholder('🔻 เลือกโหมดความบันเทิง...')
+                .setPlaceholder('🔻 จิ้มเลือกโหมดตรงนี้เลยจ้า...')
                 .addOptions(
                     {
                         label: '✨ Anime Gallery (ทั่วไป)',
-                        description: 'ค้นหารูปอนิเมะน่ารักๆ สดใสๆ',
+                        description: 'ค้นหารูปอนิเมะน่ารักๆ',
                         value: 'rating:general',
                         emoji: '🎀'
                     },
                     {
                         label: '🔞 Secret Zone (18+)',
-                        description: 'ค้นหารูปเด็ดๆ... แบบที่ซีม่อนชอบ',
+                        description: 'ค้นหารูปเด็ดๆ (ระวังหลังด้วยนะ)',
                         value: 'rating:explicit',
                         emoji: '🔥'
                     },
@@ -114,11 +108,14 @@ client.on('interactionCreate', async interaction => {
 
             const row = new ActionRowBuilder().addComponents(selectMenu);
 
-            await interaction.reply({ embeds: [embed], components: [row], ephemeral: true });
+            // ephemeral: false = ทุกคนเห็น Panel นี้
+            await interaction.reply({ embeds: [embed], components: [row], ephemeral: false });
         }
     }
 
-    // --- ตอนเลือกเมนู ---
+    // ====================================================
+    // 🟡 ส่วนที่ 2: ตอนสมาชิกเลือกเมนู (Dropdown)
+    // ====================================================
     if (interaction.isStringSelectMenu()) {
         if (interaction.customId === 'mode_select') {
             const selectedMode = interaction.values[0];
@@ -127,11 +124,11 @@ client.on('interactionCreate', async interaction => {
             let btnId = '';
 
             if (selectedMode === 'rating:general') {
-                label = '🚀 เริ่มค้นหารูปน่ารักๆ';
+                label = '🚀 กดปุ่มนี้เพื่อเริ่มค้นหา (ปกติ)';
                 btnStyle = ButtonStyle.Success;
                 btnId = 'btn_open_modal_sfw';
             } else {
-                label = '😈 เริ่มค้นหา... (โซนลับ)';
+                label = '😈 กดปุ่มนี้เพื่อเริ่มค้นหา (18+)';
                 btnStyle = ButtonStyle.Danger;
                 btnId = 'btn_open_modal_nsfw';
             }
@@ -143,14 +140,19 @@ client.on('interactionCreate', async interaction => {
 
             const row = new ActionRowBuilder().addComponents(button);
 
-            await interaction.update({ 
-                content: `✅ โหมดที่เลือก: **${selectedMode === 'rating:general' ? 'ปกติ' : '18+'}**\nกดปุ่มด้านล่างเพื่อใส่ชื่อตัวละครเลยค่ะ!`, 
-                components: [row] 
+            // ตอบกลับแบบ ephemeral: true (เห็นเฉพาะคนที่กดเลือก)
+            // เพื่อไม่ให้แย่งกันกดถ้าคนใช้เยอะ
+            await interaction.reply({ 
+                content: `✅ คุณเลือกโหมด: **${selectedMode === 'rating:general' ? 'ปกติ' : '18+'}**\nกดปุ่มด้านล่างเพื่อใส่ชื่อตัวละครได้เลย!`, 
+                components: [row],
+                ephemeral: true 
             });
         }
     }
 
-    // --- ตอนกดปุ่มเปิด Modal ---
+    // ====================================================
+    // 🟠 ส่วนที่ 3: ตอนกดปุ่ม (เปิดฟอร์ม)
+    // ====================================================
     if (interaction.isButton()) {
         if (interaction.customId.startsWith('btn_open_modal')) {
             const mode = interaction.customId.includes('nsfw') ? 'nsfw' : 'sfw';
@@ -161,15 +163,15 @@ client.on('interactionCreate', async interaction => {
 
             const genderInput = new TextInputBuilder()
                 .setCustomId('input_gender')
-                .setLabel("เพศ (เช่น หญิง, ชาย)")
+                .setLabel("เพศ (เช่น หญิง/ชาย)")
                 .setPlaceholder("หญิง")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(false);
 
             const nameInput = new TextInputBuilder()
                 .setCustomId('input_name')
-                .setLabel("ชื่อตัวละคร (ภาษาอังกฤษเท่านั้น)")
-                .setPlaceholder("เช่น Nami, Rem, Zero Two")
+                .setLabel("ชื่อตัวละคร (ไทยหรืออังกฤษก็ได้)")
+                .setPlaceholder("เช่น นามิ, Nami, Rem")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
@@ -185,50 +187,68 @@ client.on('interactionCreate', async interaction => {
             const row3 = new ActionRowBuilder().addComponents(amountInput);
 
             modal.addComponents(row1, row2, row3);
-
             await interaction.showModal(modal);
         }
     }
 
-    // --- ตอนส่งข้อมูล (ค้นหารูป) ---
+    // ====================================================
+    // 🔴 ส่วนที่ 4: ประมวลผลและส่งรูป (หัวใจสำคัญ)
+    // ====================================================
     if (interaction.isModalSubmit()) {
         if (interaction.customId.startsWith('modal_gen')) {
             await interaction.deferReply({ ephemeral: true }); 
 
             const isNSFW = interaction.customId.includes('nsfw');
             const gender = interaction.fields.getTextInputValue('input_gender');
-            const charName = interaction.fields.getTextInputValue('input_name');
+            const charNameRaw = interaction.fields.getTextInputValue('input_name');
             const amountStr = interaction.fields.getTextInputValue('input_amount');
             
             let amount = parseInt(amountStr);
             if (isNaN(amount) || amount < 1) amount = 1;
             if (amount > 5) amount = 5;
 
-            // จัดรูปแบบชื่อและ Tag
-            const formattedName = charName.trim().toLowerCase().replace(/ /g, '_');
-            const ratingTag = isNSFW ? 'rating:explicit' : 'rating:general';
-            
-            // API ฟรี (Gelbooru)
-            const apiUrl = `https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=${amount}&tags=${formattedName}+${ratingTag}`;
-
             try {
-                const response = await axios.get(apiUrl);
+                // 1. แปลภาษาไทย -> อังกฤษ (ถ้าจำเป็น)
+                let searchName = charNameRaw;
+                // ตรวจสอบว่ามีภาษาไทยไหม
+                if (/[ก-๙]/.test(charNameRaw)) {
+                    try {
+                        searchName = await translate(charNameRaw, { to: 'en' });
+                        console.log(`Translate: ${charNameRaw} -> ${searchName}`);
+                    } catch (e) {
+                        console.error('Translation failed:', e);
+                        // ถ้าแปลไม่ได้ ให้ใช้ชื่อเดิมไปก่อน
+                    }
+                }
+
+                // จัด Format ชื่อสำหรับการค้นหา (เปลี่ยนเว้นวรรคเป็น _ )
+                const formattedName = searchName.trim().toLowerCase().replace(/ /g, '_');
+                const ratingTag = isNSFW ? 'rating:explicit' : 'rating:general';
+                
+                // 2. เรียก API (ใส่ User-Agent แก้ Error)
+                const apiUrl = `https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=${amount}&tags=${formattedName}+${ratingTag}`;
+                
+                const response = await axios.get(apiUrl, {
+                    headers: {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/103.0.0.0 Safari/537.36'
+                    }
+                });
+
                 const posts = response.data.post; 
 
                 if (!posts || posts.length === 0) {
-                    await interaction.editReply(`😿 ปายหาตัวละคร **"${charName}"** ในโหมดนี้ไม่เจอเลยค่ะ\n(ลองเช็คตัวสะกดภาษาอังกฤษ หรือตัวนี้อาจจะไม่มีรูป 18+ ก็ได้น้า)`);
+                    await interaction.editReply(`😿 ปายหาตัวละคร **"${charNameRaw}"** (ค้นหาว่า: ${formattedName}) ไม่เจอเลยค่ะ\nลองเปลี่ยนคำค้นหา หรือเปลี่ยนโหมดดูนะคะ`);
                     return;
                 }
 
                 let successCount = 0;
                 for (const post of posts) {
                     const imageUrl = post.file_url;
-                    
                     try {
                         const dmEmbed = new EmbedBuilder()
                             .setColor(isNSFW ? '#FF0000' : '#00FF00')
-                            .setTitle(`รูปน้อง ${charName} มาแล้ว! ${isNSFW ? '🔞' : '✨'}`)
-                            .setDescription(`โหมด: ${isNSFW ? '18+ (Secret)' : 'ปกติ'}\nเพศ: ${gender || 'ไม่ระบุ'}`)
+                            .setTitle(`รูปน้อง ${charNameRaw} มาแล้ว! ${isNSFW ? '🔞' : '✨'}`)
+                            .setDescription(`โหมด: ${isNSFW ? '18+ (Secret)' : 'ปกติ'}\nคำค้นหา: ${formattedName}`)
                             .setImage(imageUrl)
                             .setFooter({ text: `Z-Gen X System | By น้องปาย` });
 
@@ -240,14 +260,14 @@ client.on('interactionCreate', async interaction => {
                 }
 
                 if (successCount > 0) {
-                    await interaction.editReply(`✅ ส่งรูป **${charName}** จำนวน **${successCount}** รูป ไปที่ DM เรียบร้อยค่ะซีม่อน! ไปเช็คของดีได้เลย~ 😘`);
+                    await interaction.editReply(`✅ ส่งรูป **${charNameRaw}** จำนวน **${successCount}** รูป ไปที่ DM เรียบร้อยค่ะ!`);
                 } else {
-                    await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! ซีม่อนต้องเปิดรับ DM จากคนแปลกหน้า (Server Privacy) ก่อนนะคะ`);
+                    await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! ช่วยเปิดรับ DM จากคนแปลกหน้าในตั้งค่า Discord หน่อยน้า`);
                 }
 
             } catch (error) {
-                console.error("API Error:", error);
-                await interaction.editReply(`😭 ระบบค้นหารูปมีปัญหาชั่วคราว (API Error) ลองใหม่ทีหลังนะคะ`);
+                console.error("Process Error:", error);
+                await interaction.editReply(`😭 เกิดข้อผิดพลาดทางเทคนิค (API/Translation) ลองใหม่อีกครั้งนะคะ`);
             }
         }
     }

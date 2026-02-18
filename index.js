@@ -1,5 +1,5 @@
 // ==========================================
-//  PAI BOT FOR ZIMON - Node.js Discord v14
+//  Z-GEN X (PAI EDITION) FOR ZIMON - Fixed
 // ==========================================
 
 const { 
@@ -21,83 +21,92 @@ const {
 const axios = require('axios');
 const express = require('express');
 
-// --- ตั้งค่าส่วนตัวของซีม่อน (แก้ตรงนี้นะคะ) ---
-const TOKEN = process.env.TOKEN || 'ใส่_TOKEN_บอท_ตรงนี้_ถ้าไม่รันในRailway'; 
-const OWNER_ID = 'ใส่_USER_ID_ของซีม่อน_ตรงนี้'; 
-const CLIENT_ID = 'ใส่_CLIENT_ID_ของบอท_ตรงนี้'; // ไอดีของตัวบอทเอง
+// --- 1. ดึงค่าจาก Railway Variables (ห้ามแก้ตรงนี้) ---
+const TOKEN = process.env.TOKEN; 
+const CLIENT_ID = process.env.CLIENT_ID; 
+const OWNER_ID = process.env.OWNER_ID; 
 
-// --- ระบบกันหลับ (Keep Alive for Railway) ---
+// ตรวจสอบว่าใส่ค่าครบไหม ถ้าไม่ครบจะแจ้งเตือนใน Log
+if (!TOKEN || !CLIENT_ID || !OWNER_ID) {
+    console.error("❌ Error: ซีม่อนลืมใส่ Variables ใน Railway ค่ะ! (ต้องใส่ TOKEN, CLIENT_ID, OWNER_ID)");
+    process.exit(1); 
+}
+
+// --- 2. ระบบกันหลับ (Keep Alive) ---
 const app = express();
-app.get('/', (req, res) => res.send('Pai is awake for Zimon! <3'));
-app.listen(process.env.PORT || 3000, () => console.log('Web server is ready!'));
+app.get('/', (req, res) => res.send('Z-Gen X System is Online for Zimon! 💖'));
+app.listen(process.env.PORT || 3000, () => console.log('✅ Web Server Ready!'));
 
-// --- สร้างตัวบอท ---
+// --- 3. สร้างตัวบอท ---
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
+    intents: [
+        GatewayIntentBits.Guilds, 
+        GatewayIntentBits.DirectMessages
+    ],
     partials: [Partials.Channel]
 });
 
-// --- ลงทะเบียนคำสั่ง Slash Command ---
+// --- 4. ลงทะเบียนคำสั่ง Slash Command ---
 const commands = [
     new SlashCommandBuilder()
-        .setName('pai_secret') // ชื่อคำสั่ง
-        .setDescription('เปิดแผงควบคุมลับเฉพาะซีม่อน (Pai Only For Zimon)')
+        .setName('pai_secret') 
+        .setDescription('เปิดแผงควบคุม Z-Gen X ลับเฉพาะซีม่อน')
 ]
     .map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// --- เริ่มทำงาน ---
+// --- 5. เริ่มทำงาน ---
 client.once('ready', async () => {
-    console.log(`น้องปายมาแล้วค่ะ! ล็อกอินในชื่อ ${client.user.tag}`);
+    console.log(`✨ น้องปายพร้อมทำงานแล้วค่ะ! ล็อกอินในชื่อ: ${client.user.tag}`);
     
-    // ลงทะเบียนคำสั่งแบบ Global (อาจใช้เวลาอัปเดต 1-2 ชม.) 
-    // หรือถ้าอยากให้ขึ้นเลย ให้แก้ Routes.applicationCommands เป็น Routes.applicationGuildCommands(CLIENT_ID, 'GUILD_ID')
     try {
+        console.log('⏳ กำลังลงทะเบียนคำสั่ง...');
         await rest.put(
             Routes.applicationCommands(CLIENT_ID),
             { body: commands },
         );
-        console.log('ลงทะเบียนคำสั่งเรียบร้อยค่ะ!');
+        console.log('✅ ลงทะเบียนคำสั่งเรียบร้อย! ใช้ /pai_secret ได้เลย');
     } catch (error) {
-        console.error(error);
+        console.error('❌ ลงทะเบียนคำสั่งพลาด:', error);
     }
 });
 
-// --- ส่วนจัดการ Interaction ---
+// --- 6. จัดการคำสั่งและปุ่ม ---
 client.on('interactionCreate', async interaction => {
     
-    // 1. ตรวจสอบการใช้คำสั่ง /pai_secret
+    // --- คำสั่ง /pai_secret ---
     if (interaction.isChatInputCommand()) {
         if (interaction.commandName === 'pai_secret') {
             
-            // เช็คว่าเป็นซีม่อนรึเปล่า?
+            // เช็ค ID ซีม่อน (ถ้าไม่ใช่ซีม่อน ห้ามใช้!)
             if (interaction.user.id !== OWNER_ID) {
                 return interaction.reply({ 
-                    content: 'ขอโทษนะคะ! คำสั่งนี้สำหรับซีม่อนคนเดียวเท่านั้นค่ะ คนอื่นห้ามใช้น้า~ 😠', 
+                    content: '🚫 ขอโทษนะคะ! ระบบนี้ล็อคไว้ให้ **ซีม่อน** คนเดียวค่ะ!', 
                     ephemeral: true 
                 });
             }
 
             const embed = new EmbedBuilder()
-                .setTitle('💖 แผงควบคุมของซีม่อน 💖')
-                .setDescription('เลือกโหมดที่ต้องการให้ปายช่วยหาได้เลยค่ะ\n(เลือกแล้วจะมีปุ่มให้กดต่อนะคะ)')
-                .setColor('#FF69B4') // สีชมพู
-                .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif'); // รูปตกแต่งน่ารักๆ
+                .setTitle('💋 Z-GEN X CONTROL PANEL')
+                .setDescription('**ยินดีต้อนรับค่ะซีม่อน...**\nเลือกโหมดที่ต้องการด้านล่างได้เลย\n(ระบบจะส่งรูปเข้า DM ส่วนตัวนะคะ)')
+                .setColor('#FF0099') 
+                .setThumbnail(client.user.displayAvatarURL())
+                .setFooter({ text: 'Service by น้องปาย' });
 
             const selectMenu = new StringSelectMenuBuilder()
                 .setCustomId('mode_select')
-                .setPlaceholder('🔻 จิ้มเลือกโหมดตรงนี้เลยค่ะ')
+                .setPlaceholder('🔻 เลือกโหมดความบันเทิง...')
                 .addOptions(
                     {
-                        label: '🌸 เจนรูปอนิเมะ (น่ารักใสๆ)',
-                        description: 'ค้นหารูปตัวละครแบบปกติ น่ารักๆ',
+                        label: '✨ Anime Gallery (ทั่วไป)',
+                        description: 'ค้นหารูปอนิเมะน่ารักๆ สดใสๆ',
                         value: 'rating:general',
                         emoji: '🎀'
                     },
                     {
-                        label: '🔞 เจนรูปอนิเมะ 18+ (วับๆแวมๆ)',
-                        description: 'ค้นหารูปตัวละครแบบ... เห็นหมดเลย >///<',
+                        label: '🔞 Secret Zone (18+)',
+                        description: 'ค้นหารูปเด็ดๆ... แบบที่ซีม่อนชอบ',
                         value: 'rating:explicit',
                         emoji: '🔥'
                     },
@@ -109,7 +118,7 @@ client.on('interactionCreate', async interaction => {
         }
     }
 
-    // 2. ตรวจสอบตอนเลือก Dropdown
+    // --- ตอนเลือกเมนู ---
     if (interaction.isStringSelectMenu()) {
         if (interaction.customId === 'mode_select') {
             const selectedMode = interaction.values[0];
@@ -118,59 +127,56 @@ client.on('interactionCreate', async interaction => {
             let btnId = '';
 
             if (selectedMode === 'rating:general') {
-                label = 'พร้อมแล้ว! กดเพื่อเริ่มค้นหารูปน่ารักๆ';
+                label = '🚀 เริ่มค้นหารูปน่ารักๆ';
                 btnStyle = ButtonStyle.Success;
                 btnId = 'btn_open_modal_sfw';
             } else {
-                label = 'พร้อมแล้ว... กดเพื่อเริ่มค้นหารูปเด็ดๆ';
+                label = '😈 เริ่มค้นหา... (โซนลับ)';
                 btnStyle = ButtonStyle.Danger;
                 btnId = 'btn_open_modal_nsfw';
             }
 
             const button = new ButtonBuilder()
                 .setCustomId(btnId)
-                .setLabel('🚀 เจนรูปเลย!')
+                .setLabel(label)
                 .setStyle(btnStyle);
 
             const row = new ActionRowBuilder().addComponents(button);
 
             await interaction.update({ 
-                content: `✅ ซีม่อนเลือกโหมด: **${selectedMode === 'rating:general' ? 'ปกติ' : '18+'}** เรียบร้อยแล้วค่ะ!\nกดปุ่มด้านล่างเพื่อใส่ข้อมูลได้เลย~`, 
+                content: `✅ โหมดที่เลือก: **${selectedMode === 'rating:general' ? 'ปกติ' : '18+'}**\nกดปุ่มด้านล่างเพื่อใส่ชื่อตัวละครเลยค่ะ!`, 
                 components: [row] 
             });
         }
     }
 
-    // 3. ตรวจสอบตอนกดปุ่ม เพื่อเปิด Modal
+    // --- ตอนกดปุ่มเปิด Modal ---
     if (interaction.isButton()) {
         if (interaction.customId.startsWith('btn_open_modal')) {
             const mode = interaction.customId.includes('nsfw') ? 'nsfw' : 'sfw';
             
             const modal = new ModalBuilder()
                 .setCustomId(`modal_gen_${mode}`)
-                .setTitle(mode === 'nsfw' ? 'ข้อมูลลับเฉพาะ (18+)' : 'ข้อมูลค้นหารูป');
+                .setTitle(mode === 'nsfw' ? '😈 ค้นหาแบบ 18+' : '✨ ค้นหาแบบปกติ');
 
-            // ช่องที่ 1: เพศ (จริงๆ API ส่วนใหญ่ค้นตามชื่อตัวละคร แต่ใส่ไว้เป็นกิมมิคได้ค่ะ หรือเอาไปเติมใน Tag)
             const genderInput = new TextInputBuilder()
                 .setCustomId('input_gender')
-                .setLabel("เพศ (ชาย/หญิง)")
-                .setPlaceholder("เช่น หญิง")
+                .setLabel("เพศ (เช่น หญิง, ชาย)")
+                .setPlaceholder("หญิง")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(false);
 
-            // ช่องที่ 2: ชื่อตัวละคร
             const nameInput = new TextInputBuilder()
                 .setCustomId('input_name')
-                .setLabel("ชื่อตัวละครอนิเมะ (ภาษาอังกฤษ)")
-                .setPlaceholder("เช่น Rem, Hatsune Miku, Naruto")
+                .setLabel("ชื่อตัวละคร (ภาษาอังกฤษเท่านั้น)")
+                .setPlaceholder("เช่น Nami, Rem, Zero Two")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
-            // ช่องที่ 3: จำนวนรูป
             const amountInput = new TextInputBuilder()
                 .setCustomId('input_amount')
                 .setLabel("จำนวนรูป (1-5)")
-                .setPlaceholder("ใส่เลข 1 ถึง 5")
+                .setPlaceholder("5")
                 .setStyle(TextInputStyle.Short)
                 .setRequired(true);
 
@@ -184,10 +190,10 @@ client.on('interactionCreate', async interaction => {
         }
     }
 
-    // 4. ตรวจสอบตอนส่ง Modal (ประมวลผลและส่งรูป)
+    // --- ตอนส่งข้อมูล (ค้นหารูป) ---
     if (interaction.isModalSubmit()) {
         if (interaction.customId.startsWith('modal_gen')) {
-            await interaction.deferReply({ ephemeral: true }); // บอกระบบว่ารอก่อนนะ กำลังหา
+            await interaction.deferReply({ ephemeral: true }); 
 
             const isNSFW = interaction.customId.includes('nsfw');
             const gender = interaction.fields.getTextInputValue('input_gender');
@@ -198,26 +204,22 @@ client.on('interactionCreate', async interaction => {
             if (isNaN(amount) || amount < 1) amount = 1;
             if (amount > 5) amount = 5;
 
-            // จัดการ Tags สำหรับค้นหา
-            // แปลงชื่อเป็น format ที่ API ชอบ (ตัวพิมพ์เล็ก, เว้นวรรคเป็น underscore)
+            // จัดรูปแบบชื่อและ Tag
             const formattedName = charName.trim().toLowerCase().replace(/ /g, '_');
             const ratingTag = isNSFW ? 'rating:explicit' : 'rating:general';
             
-            // ใช้ API สาธารณะ (ตัวอย่างใช้ Gelbooru Public API แบบไม่ต้องใช้ Key)
-            // หมายเหตุ: บางครั้ง API สาธารณะอาจช้าหรือล่มเป็นบางช่วง
+            // API ฟรี (Gelbooru)
             const apiUrl = `https://gelbooru.com/index.php?page=dapi&s=post&q=index&json=1&limit=${amount}&tags=${formattedName}+${ratingTag}`;
 
             try {
-                // ดึงข้อมูลจาก API
                 const response = await axios.get(apiUrl);
-                const posts = response.data.post; // Gelbooru structure
+                const posts = response.data.post; 
 
                 if (!posts || posts.length === 0) {
-                    await interaction.editReply(`😿 ปายหาตัวละคร **"${charName}"** ในโหมดนี้ไม่เจอเลยค่ะซีม่อน...\nลองเช็คชื่อภาษาอังกฤษ หรือลองเปลี่ยนโหมดดูนะคะ`);
+                    await interaction.editReply(`😿 ปายหาตัวละคร **"${charName}"** ในโหมดนี้ไม่เจอเลยค่ะ\n(ลองเช็คตัวสะกดภาษาอังกฤษ หรือตัวนี้อาจจะไม่มีรูป 18+ ก็ได้น้า)`);
                     return;
                 }
 
-                // เตรียมส่ง DM
                 let successCount = 0;
                 for (const post of posts) {
                     const imageUrl = post.file_url;
@@ -225,27 +227,27 @@ client.on('interactionCreate', async interaction => {
                     try {
                         const dmEmbed = new EmbedBuilder()
                             .setColor(isNSFW ? '#FF0000' : '#00FF00')
-                            .setTitle(`รูปน้อง ${charName} มาแล้วค่ะ! ${isNSFW ? '🔞' : '✨'}`)
-                            .setDescription(`โหมด: ${isNSFW ? '18+ (เสียวๆ)' : 'ปกติ (น่ารัก)'} | เพศ: ${gender}`)
+                            .setTitle(`รูปน้อง ${charName} มาแล้ว! ${isNSFW ? '🔞' : '✨'}`)
+                            .setDescription(`โหมด: ${isNSFW ? '18+ (Secret)' : 'ปกติ'}\nเพศ: ${gender || 'ไม่ระบุ'}`)
                             .setImage(imageUrl)
-                            .setFooter({ text: `For Zimon Only | By น้องปาย` });
+                            .setFooter({ text: `Z-Gen X System | By น้องปาย` });
 
                         await interaction.user.send({ embeds: [dmEmbed] });
                         successCount++;
                     } catch (err) {
-                        console.error("ส่ง DM ไม่ได้:", err);
+                        console.error("DM Error:", err);
                     }
                 }
 
                 if (successCount > 0) {
-                    await interaction.editReply(`✅ ปายส่งรูป **${charName}** จำนวน **${successCount}** รูป ไปให้ใน DM (แชทส่วนตัว) แล้วนะคะซีม่อน! ไปเช็คได้เลย~ 😘`);
+                    await interaction.editReply(`✅ ส่งรูป **${charName}** จำนวน **${successCount}** รูป ไปที่ DM เรียบร้อยค่ะซีม่อน! ไปเช็คของดีได้เลย~ 😘`);
                 } else {
-                    await interaction.editReply(`❌ ปายพยายามส่งแล้ว แต่ส่ง DM ไม่ไปค่ะ ซีม่อนเปิดรับ DM จากคนแปลกหน้าหรือยังคะ?`);
+                    await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! ซีม่อนต้องเปิดรับ DM จากคนแปลกหน้า (Server Privacy) ก่อนนะคะ`);
                 }
 
             } catch (error) {
-                console.error("Error fetching images:", error);
-                await interaction.editReply(`😭 เกิดข้อผิดพลาดตอนดึงรูปค่ะ API อาจจะล่มชั่วคราว ลองใหม่ทีหลังน้า~`);
+                console.error("API Error:", error);
+                await interaction.editReply(`😭 ระบบค้นหารูปมีปัญหาชั่วคราว (API Error) ลองใหม่ทีหลังนะคะ`);
             }
         }
     }

@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) - V4.0 (Private Channel)
+//  Z-GEN X (PAI EDITION) - V4.1 (Photo Fix)
 // ==========================================
 
 const { 
@@ -29,11 +29,11 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const OWNER_ID = process.env.OWNER_ID; 
 
 const app = express();
-app.get('/', (req, res) => res.send('Z-Gen X V4.0 Private Channel is Ready! 💖'));
+app.get('/', (req, res) => res.send('Z-Gen X V4.1 Photo Fix is Ready! 💖'));
 app.listen(process.env.PORT || 3000);
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent],
     partials: [Partials.Channel]
 });
 
@@ -46,7 +46,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✨ น้องปาย V4.0 ระบบห้องลับพร้อมทำงานแล้วค่ะ!`);
+        console.log(`✨ น้องปาย V4.1 พร้อมแก้ตัวแล้วค่ะซีม่อน!`);
     } catch (e) { console.error(e); }
 });
 
@@ -55,8 +55,8 @@ client.on('interactionCreate', async interaction => {
         if (interaction.user.id !== OWNER_ID) return interaction.reply({ content: '🚫 เฉพาะซีม่อนเท่านั้น!', ephemeral: true });
         
         const embed = new EmbedBuilder()
-            .setTitle('💋 Z-GEN X : PRIVATE ROOM SYSTEM')
-            .setDescription('**ยินดีต้อนรับค่ะซีม่อน**\nระบบจะสร้างห้องส่วนตัว (NSFW) เพื่อส่งรูปให้ท่านโดยเฉพาะ\n\n⚠️ **คำเตือน:** ห้องจะถูกลบอัตโนมัติภายใน 5 นาที!')
+            .setTitle('💋 Z-GEN X : PRIVATE ROOM V4.1')
+            .setDescription('**ระบบส่งรูปเข้าห้องลับส่วนตัว**\nเลือกโหมดที่ต้องการได้เลยค่ะ รอบนี้ปายจูนมาใหม่รูปขึ้นชัวร์!')
             .setColor('#FF0099')
             .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif');
 
@@ -71,9 +71,9 @@ client.on('interactionCreate', async interaction => {
         const isNSFW = interaction.values[0] === 'nsfw';
         const btn = new ButtonBuilder()
             .setCustomId(isNSFW ? 'btn_nsfw' : 'btn_sfw')
-            .setLabel(isNSFW ? '😈 เจนรูป 18+ (ในห้องลับ)' : '🚀 เจนรูปปกติ (ในห้องลับ)')
+            .setLabel(isNSFW ? '😈 เจนรูป 18+ (ห้องลับ)' : '🚀 เจนรูปปกติ (ห้องลับ)')
             .setStyle(isNSFW ? ButtonStyle.Danger : ButtonStyle.Success);
-        await interaction.reply({ content: `✅ เลือกโหมด **${isNSFW ? '18+' : 'ปกติ'}** แล้วค่ะ!`, components: [new ActionRowBuilder().addComponents(btn)], ephemeral: true });
+        await interaction.reply({ content: `✅ โหมด **${isNSFW ? '18+' : 'ปกติ'}** พร้อมแล้ว! กดปุ่มเพื่อใส่ชื่อได้เลยค่ะ`, components: [new ActionRowBuilder().addComponents(btn)], ephemeral: true });
     }
 
     if (interaction.isButton()) {
@@ -105,46 +105,48 @@ client.on('interactionCreate', async interaction => {
             const res = await axios.get(url);
             const posts = res.data;
 
-            if (!posts || posts.length === 0) return interaction.editReply(`😿 ไม่เจอน้อง **"${rawName}"** เลยค่ะ`);
+            if (!posts || posts.length === 0 || posts === "") {
+                return interaction.editReply(`😿 ไม่เจอน้อง **"${rawName}"** เลยค่ะซีม่อน`);
+            }
 
-            // --- ส่วนสำคัญ: สร้างห้องส่วนตัวแบบ NSFW ---
-            const channelName = `secret-${interaction.user.username}`;
+            // สร้างห้องส่วนตัว
             const privateChannel = await interaction.guild.channels.create({
-                name: channelName,
+                name: `secret-${interaction.user.username}`,
                 type: ChannelType.GuildText,
-                nsfw: true, // เปิดโหมด NSFW
+                nsfw: true,
                 permissionOverwrites: [
-                    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] }, // ปิดไม่ให้ทุกคนเห็น
-                    { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] }, // ให้เฉพาะคนกดเห็น
-                    { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] } // ให้บอทเห็น
+                    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
+                    { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
+                    { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.EmbedLinks, PermissionFlagsBits.AttachFiles] }
                 ],
             });
 
-            await interaction.editReply(`✅ สร้างห้องลับเรียบร้อยค่ะ! ไปที่ห้อง <#${privateChannel.id}> ได้เลย~`);
+            await interaction.editReply(`✅ เตรียมรูปเสร็จแล้ว! เข้าไปดูที่ห้อง <#${privateChannel.id}> ได้เลยค่ะ`);
 
-            const introEmbed = new EmbedBuilder()
-                .setColor('#FF0099')
-                .setTitle(`💖 ห้องลับของ ${interaction.user.username} 💖`)
-                .setDescription(`ปายหารูป **"${rawName}"** มาให้แล้วค่ะ!\n⌛ **ห้องนี้จะถูกลบอัตโนมัติภายใน 5 นาที**\nอย่าลืมบันทึกรูปไว้ในเครื่องนะคะนะคะซีม่อน~`)
-                .setFooter({ text: 'Z-Gen X Private System' });
+            await privateChannel.send({ 
+                content: `💖 **ห้องลับของซีม่อนมาแล้ววว!** 💖\nปายหารูป **"${rawName}"** มาให้แล้วนะคะ\n⌛ ห้องนี้จะหายไปใน 5 นาที อย่าลืมเซฟน้าาา!` 
+            });
 
-            await privateChannel.send({ content: `<@${interaction.user.id}>`, embeds: [introEmbed] });
-
+            // ส่งรูปทีละรูปด้วยระบบ Embed แบบใหม่
             for (const p of posts) {
-                const img = p.file_url || p.sample_url;
-                if (!img) continue;
-                const embed = new EmbedBuilder()
+                const imgUrl = p.file_url || p.sample_url || p.preview_url;
+                if (!imgUrl) continue;
+
+                const finalImg = imgUrl.startsWith('http') ? imgUrl : `https:${imgUrl}`;
+                
+                const photoEmbed = new EmbedBuilder()
                     .setColor(isNSFW ? '#FF0000' : '#00FF00')
-                    .setImage(img.startsWith('http') ? img : `https:${img}`);
-                await privateChannel.send({ embeds: [embed] });
+                    .setTitle(`✨ น้อง ${rawName} (${finalTag})`)
+                    .setImage(finalImg)
+                    .setURL(finalImg); // ใส่ลิงก์เผื่อรูปไม่โหลดในบางเครื่อง
+
+                await privateChannel.send({ embeds: [photoEmbed] }).catch(e => console.log("Send Image Fail", e));
             }
 
-            // --- ตั้งเวลาลบห้อง 5 นาที ---
+            // ตั้งเวลาลบห้อง
             setTimeout(async () => {
-                try {
-                    await privateChannel.delete('หมดเวลาการใช้งานห้องลับ');
-                } catch (e) { console.log('ลบห้องไม่สำเร็จ หรือห้องโดนลบไปแล้ว'); }
-            }, 5 * 60 * 1000); // 5 นาที
+                try { await privateChannel.delete(); } catch (e) {}
+            }, 5 * 60 * 1000);
 
         } catch (err) {
             await interaction.editReply(`😭 เกิดข้อผิดพลาด: ${err.message}`);

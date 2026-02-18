@@ -1,6 +1,6 @@
 {
   "name": "z-gen-x-bot",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "description": "Zimon Private Bot",
   "main": "index.js",
   "scripts": {
@@ -9,7 +9,8 @@
   "dependencies": {
     "discord.js": "^14.11.0",
     "axios": "^1.4.0",
-    "express": "^4.18.2"
+    "express": "^4.18.2",
+    "translate-google": "^1.5.0"
   },
   "engines": {
     "node": "18.x"

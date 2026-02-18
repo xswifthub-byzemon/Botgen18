@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) - V5.0 FINAL BYPASS
+//  Z-GEN X (PAI EDITION) - V5.0 (DM UNLOCKED)
 // ==========================================
 
 const { 
@@ -10,31 +10,24 @@ const {
     StringSelectMenuBuilder, 
     ButtonBuilder, 
     ButtonStyle, 
-    ModalBuilder, 
-    TextInputBuilder, 
-    TextInputStyle, 
     EmbedBuilder,
     REST,
     Routes,
-    SlashCommandBuilder,
-    PermissionFlagsBits,
-    ChannelType,
-    AttachmentBuilder // ตัวช่วยส่งไฟล์ตรง
+    SlashCommandBuilder
 } = require('discord.js');
 const axios = require('axios');
 const express = require('express');
-const translate = require('translate-google'); 
 
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = process.env.CLIENT_ID; 
 const OWNER_ID = process.env.OWNER_ID; 
 
 const app = express();
-app.get('/', (req, res) => res.send('Z-Gen X V5.0 Final is Ready! 💖'));
+app.get('/', (req, res) => res.send('Pai is Ready for Zimon! 💖'));
 app.listen(process.env.PORT || 3000);
 
 const client = new Client({
-    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages],
+    intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages],
     partials: [Partials.Channel]
 });
 
@@ -47,7 +40,7 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✨ น้องปาย V5.0 พร้อมส่งรูป 18+ แบบไม่โดนบล็อกแล้วค่ะซีม่อน!`);
+        console.log(`✨ น้องปาย V5.0 พร้อมส่งรูปเข้า DM แล้วค่ะ!`);
     } catch (e) { console.error(e); }
 });
 
@@ -56,98 +49,51 @@ client.on('interactionCreate', async interaction => {
         if (interaction.user.id !== OWNER_ID) return interaction.reply({ content: '🚫 เฉพาะซีม่อนเท่านั้น!', ephemeral: true });
         
         const embed = new EmbedBuilder()
-            .setTitle('💋 Z-GEN X : ULTIMATE PRIVATE ROOM')
-            .setDescription('**ระบบส่งรูป 18+ แบบบายพาสการตรวจจับ**\nเลือกโหมดที่ต้องการได้เลยค่ะ รอบนี้ปายส่งเป็นไฟล์ตรงให้เลย!')
-            .setColor('#FF0099')
-            .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif');
+            .setTitle('💋 Z-GEN X : DM DIRECT SERVICE')
+            .setDescription('**ยินดีต้อนรับค่ะซีม่อน**\nปายปรับระบบใหม่ส่งตรงเข้า DM แบบที่บอทคนอื่นทำได้แล้วน้า!\nเลือกโหมดด้านล่างได้เลยค่ะ')
+            .setColor('#FF0099');
 
-        const menu = new StringSelectMenuBuilder().setCustomId('mode_select').setPlaceholder('🔻 เลือกโหมด...').addOptions(
-            { label: '✨ รูปปกติ (Safebooru)', value: 'sfw', emoji: '🎀' },
-            { label: '🔞 รูป 18+ (Rule34 - Bypass)', value: 'nsfw', emoji: '🔥' }
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder().setCustomId('gen_sfw').setLabel('✨ SFW (ปกติ)').setStyle(ButtonStyle.Success).setEmoji('🎀'),
+            new ButtonBuilder().setCustomId('gen_nsfw').setLabel('🔞 NSFW (18+)').setStyle(ButtonStyle.Danger).setEmoji('🔥')
         );
-        await interaction.reply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(menu)] });
-    }
 
-    if (interaction.isStringSelectMenu() && interaction.customId === 'mode_select') {
-        const isNSFW = interaction.values[0] === 'nsfw';
-        const btn = new ButtonBuilder()
-            .setCustomId(isNSFW ? 'btn_nsfw' : 'btn_sfw')
-            .setLabel(isNSFW ? '😈 เจนรูป 18+ (Bypass Mode)' : '🚀 เจนรูปปกติ')
-            .setStyle(isNSFW ? ButtonStyle.Danger : ButtonStyle.Success);
-        await interaction.reply({ content: `✅ โหมด **${isNSFW ? '18+' : 'ปกติ'}** ล็อคเป้าหมายแล้ว! กดปุ่มเพื่อใส่ชื่อเลยค่ะ`, components: [new ActionRowBuilder().addComponents(btn)], ephemeral: true });
+        await interaction.reply({ embeds: [embed], components: [row] });
     }
 
     if (interaction.isButton()) {
-        const mode = interaction.customId.includes('nsfw') ? 'nsfw' : 'sfw';
-        const modal = new ModalBuilder().setCustomId(`modal_${mode}`).setTitle('🔍 ค้นหาตัวละคร');
-        modal.addComponents(
-            new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('name').setLabel('ชื่อตัวละคร (ไทย/อังกฤษ)').setStyle(TextInputStyle.Short).setRequired(true)),
-            new ActionRowBuilder().addComponents(new TextInputBuilder().setCustomId('num').setLabel('จำนวนรูป (1-5)').setValue('5').setStyle(TextInputStyle.Short).setRequired(true))
-        );
-        await interaction.showModal(modal);
-    }
-
-    if (interaction.isModalSubmit()) {
         await interaction.deferReply({ ephemeral: true });
-        const isNSFW = interaction.customId.includes('modal_nsfw');
-        const rawName = interaction.fields.getTextInputValue('name');
-        let amount = parseInt(interaction.fields.getTextInputValue('num')) || 1;
-        if (amount > 5) amount = 5;
+        const isNSFW = interaction.customId === 'gen_nsfw';
+        const type = isNSFW ? 'nsfw' : 'sfw';
+        
+        // รายชื่อหมวดหมู่ (เลือกมาเฉพาะที่เด็ดๆ)
+        const category = isNSFW ? 'waifu' : 'waifu'; 
+        const url = `https://api.waifu.pics/${type}/${category}`;
 
         try {
-            let searchTag = rawName;
-            if (/[ก-๙]/.test(rawName)) searchTag = await translate(rawName, { to: 'en' }).catch(() => rawName);
-            const finalTag = searchTag.trim().toLowerCase().replace(/ /g, '_');
+            // ดึงรูป 5 รูปตามที่ซีม่อนเคยสั่งไว้
+            let successCount = 0;
+            for (let i = 0; i < 5; i++) {
+                const res = await axios.get(url);
+                const imgUrl = res.data.url;
 
-            const url = isNSFW 
-                ? `https://api.rule34.xxx/index.php?page=dapi&s=post&q=index&json=1&limit=${amount}&tags=${finalTag}`
-                : `https://safebooru.org/index.php?page=dapi&s=post&q=index&json=1&limit=${amount}&tags=${finalTag}`;
-
-            const res = await axios.get(url);
-            const posts = res.data;
-
-            if (!posts || posts.length === 0) return interaction.editReply(`😿 ไม่เจอน้อง **"${rawName}"** เลยค่ะ`);
-
-            // สร้างห้องส่วนตัว
-            const privateChannel = await interaction.guild.channels.create({
-                name: `secret-${interaction.user.username}`,
-                type: ChannelType.GuildText,
-                nsfw: true,
-                permissionOverwrites: [
-                    { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                    { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages] },
-                    { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.AttachFiles] }
-                ],
-            });
-
-            await interaction.editReply(`✅ เตรียมรูปเสร็จแล้ว! เข้าไปดูที่ห้อง <#${privateChannel.id}> ได้เลยค่ะ`);
-
-            await privateChannel.send({ 
-                content: `💖 **คลังแสงลับของซีม่อน (V5.0) มาแล้ววว!** 💖\nกำลังโหลดรูปน้อง **"${rawName}"** แบบ Bypass ให้ค่ะ รอแป๊บน้าาา!` 
-            });
-
-            for (const p of posts) {
-                const imgUrl = p.file_url || p.sample_url;
-                if (!imgUrl) continue;
-                const finalImg = imgUrl.startsWith('http') ? imgUrl : `https:${imgUrl}`;
-                
-                // --- ส่วนที่แก้ไข: ดาวน์โหลดไฟล์มาส่งตรงๆ เพื่อ Bypass การบล็อก Link ---
-                try {
-                    const attachment = new AttachmentBuilder(finalImg, { name: `SPOILER_ZGENX_${finalTag}.png` });
-                    await privateChannel.send({ files: [attachment] });
-                } catch (e) {
-                    // ถ้าส่งไฟล์ไม่ได้ ให้ลองส่งเป็น Link แบบใส่สปอยล์
-                    await privateChannel.send({ content: `|| ${finalImg} ||` });
+                if (imgUrl) {
+                    // ส่งแบบข้อความ Link ดิบๆ เพื่อให้ Discord Preview รูปเอง (วิธีนี้ผ่านง่ายที่สุด)
+                    await interaction.user.send({ 
+                        content: `✨ **รูปที่ ${i+1}** ของซีม่อนมาแล้วค่ะ!\n${imgUrl}` 
+                    }).catch(e => console.log("DM Error", e));
+                    successCount++;
                 }
             }
 
-            // ตั้งเวลาลบห้อง
-            setTimeout(async () => {
-                try { await privateChannel.delete(); } catch (e) {}
-            }, 5 * 60 * 1000);
-
-        } catch (err) {
-            await interaction.editReply(`😭 เกิดข้อผิดพลาด: ${err.message}`);
+            if (successCount > 0) {
+                await interaction.editReply(`✅ ปายส่งรูป ${isNSFW ? '18+' : 'ปกติ'} จำนวน ${successCount} รูปเข้า DM เรียบร้อยแล้วค่ะซีม่อน!`);
+            } else {
+                await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ ซีม่อนเปิดรับ DM หรือยังน้า?`);
+            }
+        } catch (error) {
+            console.error(error);
+            await interaction.editReply(`😭 API มีปัญหานิดหน่อย ลองใหม่อีกครั้งนะคะ`);
         }
     }
 });

@@ -1,7 +1,7 @@
 {
-  "name": "pai-bot-for-zimon",
+  "name": "z-gen-x-bot",
   "version": "1.0.0",
-  "description": "Bot for Zimon Only",
+  "description": "Zimon Private Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

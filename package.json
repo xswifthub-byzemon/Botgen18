@@ -1,7 +1,7 @@
 {
   "name": "z-gen-x-bot",
-  "version": "7.1.0",
-  "description": "Zimon Private Bot Ultimate Edition",
+  "version": "6.0.0",
+  "description": "Zimon Anime Bot Classic",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

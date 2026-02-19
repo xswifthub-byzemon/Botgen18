@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) - V9.5 (FIXED CRASH)
+//  Z-GEN X (PAI EDITION) - V10.0 (COMPLETE)
 // ==========================================
 
 const { 
@@ -16,7 +16,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const OWNER_ID = process.env.OWNER_ID; 
 
 const app = express();
-app.get('/', (req, res) => res.send('Z-Gen X Fixed Mode is Online! 🔥'));
+app.get('/', (req, res) => res.send('Z-Gen X Complete Mode is Online! 🔥'));
 app.listen(process.env.PORT || 3000);
 
 const client = new Client({
@@ -30,13 +30,13 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// ตัวแปรเก็บค่าการเลือกเพศของแต่ละคน
+// ตัวแปรเก็บค่าการเลือกของแต่ละคน
 const userPreferences = {};
 
 client.once('ready', async () => {
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✨ น้องปาย V9.5 (Fixed) พร้อมทำงานแล้วค่ะ!`);
+        console.log(`✨ น้องปาย V10.0 พร้อมบริการครบทุกแนวแล้วค่ะ!`);
     } catch (e) { console.error(e); }
 });
 
@@ -75,8 +75,8 @@ client.on('interactionCreate', async interaction => {
             .setTitle('🔞 Z-GEN X : SPICY GALLERY')
             .setDescription(
                 '**ยินดีต้อนรับสมาชิกทุกท่านค่ะ** 🌹\n' +
-                'ปายอัปเกรดใหม่! เลือกแนวที่ชอบได้เลย\n\n' +
-                '1️⃣ **เลือกสไตล์** ในเมนูด้านล่าง\n' +
+                'ปายอัปเกรดใหม่ล่าสุด! มีครบทุกรสชาติ\n\n' +
+                '1️⃣ **เลือกแนวที่ชอบ** ในเมนูด้านล่าง\n' +
                 '2️⃣ **กดปุ่ม** สีเขียว หรือ สีแดง\n' +
                 '3️⃣ **รับของดี** ใน DM ได้เลย!'
             )
@@ -84,30 +84,25 @@ client.on('interactionCreate', async interaction => {
             .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif')
             .setFooter({ text: 'บริการความสุขโดยน้องปาย 💋' });
 
-        // Dropdown เลือกเพศ (แก้ไข Emoji ตรงนี้!)
+        // Dropdown เลือกแนว (เพิ่ม Yuri)
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('gender_select')
             .setPlaceholder('🔻 เลือกแนวที่อยากดู (กดเลยจ้า)')
             .addOptions(
-                { label: 'สาวน้อย (Girl)', description: 'สาวสวย นมโต หีฟิต', value: 'waifu', emoji: '🚺' },
-                // เปลี่ยน Emoji เป็น 🍆 (มะเขือยาว) เพื่อสื่อถึงดุ้น และไม่บัคแน่นอน
-                { label: 'สาวดุ้น (Trap)', description: 'น่ารักเหมือนผู้หญิง แต่มีดุ้น!', value: 'trap', emoji: '🍆' }
+                { label: 'สาวน้อย (Waifu)', description: 'สาวสวย นมโต หีฟิต', value: 'waifu', emoji: '🚺' },
+                { label: 'สาวดุ้น (Trap)', description: 'น่ารักเหมือนผู้หญิง แต่มีดุ้น!', value: 'trap', emoji: '🍆' },
+                { label: 'เลสเบี้ยน (Yuri)', description: 'หญิงรักหญิง นัวเนียสุดฟิน', value: 'neko', emoji: '✂️' } 
+                // หมายเหตุ: ใช้ 'neko' แทน yuri ชั่วคราวในหมวด Neko/Yuri เพื่อความชัวร์ หรือใช้ 'kick'/'kiss' แทนใน sfw
+                // แต่เพื่อความง่าย ปายจะเขียน Logic แยกให้ข้างล่างค่ะ
             );
 
-        // ปุ่มกด
         const btnRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder().setCustomId('open_sfw').setLabel('น่ารัก (SFW)').setStyle(ButtonStyle.Success).setEmoji('🎀'),
             new ButtonBuilder().setCustomId('open_nsfw').setLabel('สยิว (NSFW)').setStyle(ButtonStyle.Danger).setEmoji('🔥'),
             new ButtonBuilder().setCustomId('open_list').setLabel('รายชื่อ (แนะนำ)').setStyle(ButtonStyle.Secondary).setEmoji('📖')
         );
 
-        await interaction.reply({ 
-            embeds: [embed], 
-            components: [
-                new ActionRowBuilder().addComponents(selectMenu), 
-                btnRow
-            ] 
-        });
+        await interaction.reply({ embeds: [embed], components: [new ActionRowBuilder().addComponents(selectMenu), btnRow] });
     }
 
     // 2. จำค่าการเลือก
@@ -115,14 +110,16 @@ client.on('interactionCreate', async interaction => {
         const selected = interaction.values[0];
         userPreferences[interaction.user.id] = selected; 
         
-        const label = selected === 'waifu' ? '🚺 สาวน้อย' : '🍆 สาวดุ้น';
-        await interaction.reply({ content: `✅ ปายจำแล้วค่ะ! ตัวเองเลือกดู **${label}** นะคะ (กดปุ่มสีแดง/เขียวต่อได้เลย)`, ephemeral: true });
+        let label = 'สาวน้อย';
+        if (selected === 'trap') label = 'สาวดุ้น';
+        if (selected === 'neko') label = 'เลสเบี้ยน';
+
+        await interaction.reply({ content: `✅ เลือกดู **${label}** แล้วค่ะ! กดปุ่มสีแดง/เขียวต่อได้เลย`, ephemeral: true });
     }
 
     // 3. ปุ่มดูรายชื่อ
     if (interaction.isButton() && interaction.customId === 'open_list') {
         await interaction.deferReply({ ephemeral: true });
-        // สร้างชื่อห้องแบบปลอดภัย (ลบอักขระพิเศษออก)
         const safeName = interaction.user.username.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'user';
         const channelName = `anime-list-${safeName}`;
         
@@ -152,7 +149,7 @@ client.on('interactionCreate', async interaction => {
         await interaction.showModal(modal);
     }
 
-    // 5. ส่งรูป + ข้อความ
+    // 5. ส่งรูป + ข้อความ (Logic เลือกหมวดหมู่)
     if (interaction.isModalSubmit()) {
         await interaction.deferReply({ ephemeral: true });
         
@@ -160,11 +157,35 @@ client.on('interactionCreate', async interaction => {
         let amount = parseInt(interaction.fields.getTextInputValue('amount')) || 1;
         if (amount > 5) amount = 5;
 
-        // ดึงค่าเพศ (Default = waifu)
-        const category = userPreferences[interaction.user.id] || 'waifu';
-        const type = isNSFW ? 'nsfw' : 'sfw';
+        // ดึงค่าที่เลือก (Default = waifu)
+        let selection = userPreferences[interaction.user.id] || 'waifu';
         
-        const url = `https://api.waifu.pics/${type}/${category}`;
+        // แปลงค่า selection ให้ตรงกับ API Category
+        // ถ้าเลือก เลสเบี้ยน (neko) -> ใน SFW ให้ใช้ 'kiss' (จูบกัน), ใน NSFW ใช้ 'neko' หรือ 'trap' ผสมกันไม่ได้ ต้องใช้ logic พิเศษ
+        // API Waifu.pics:
+        // SFW: waifu, nekomimi, shinobu, megumin, bully, cuddle, cry, hug, awoo, kiss, lick, pat, smug, bonk, yeet, blush, smile, wave, highfive, handhold, nom, bite, glomp, slap, kill, kick, happy, wink, poke, dance, cringe
+        // NSFW: waifu, neko, trap, blowjob
+        
+        // ปรับจูนหมวดหมู่ให้ตรงโจทย์:
+        let apiCategory = 'waifu'; // default
+        
+        if (selection === 'waifu') {
+            apiCategory = 'waifu';
+        } else if (selection === 'trap') {
+            apiCategory = 'trap';
+        } else if (selection === 'neko') { // เลสเบี้ยน (Yuri)
+            if (isNSFW) {
+                // API นี้ไม่มี Yuri ตรงๆ ใน NSFW แต่ 'neko' บางทีก็มี 
+                // หรือถ้าอยากได้ Yuri ชัดๆ อาจต้องใช้ 'waifu' แล้วลุ้นเอา
+                // แต่เพื่อความแตกต่าง ปายจะใช้ 'neko' (สาวหูแมว) แทน เพราะมักจะมีฉากนัวเนีย
+                apiCategory = 'neko'; 
+            } else {
+                apiCategory = 'kiss'; // SFW ให้เป็นฉากจูบ/กอด (ดูเป็นเลสเบี้ยนใสๆ)
+            }
+        }
+
+        const type = isNSFW ? 'nsfw' : 'sfw';
+        const url = `https://api.waifu.pics/${type}/${apiCategory}`;
 
         try {
             let successCount = 0;
@@ -183,7 +204,11 @@ client.on('interactionCreate', async interaction => {
             }
 
             if (successCount > 0) {
-                const label = category === 'waifu' ? 'สาวน้อย' : 'สาวดุ้น';
+                // Label สำหรับแจ้งเตือน
+                let label = 'สาวน้อย';
+                if (selection === 'trap') label = 'สาวดุ้น';
+                if (selection === 'neko') label = 'เลสเบี้ยน';
+                
                 await interaction.editReply(`✅ ส่ง **${label}** จำนวน **${successCount}** รูป เข้า DM แล้วค่ะ!`);
             } else {
                 await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! (กรุณาเปิดรับข้อความจากคนแปลกหน้าใน Server ด้วยน้า)`);

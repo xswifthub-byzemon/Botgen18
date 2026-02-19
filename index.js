@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) - V9.3 (GENDER SELECT)
+//  Z-GEN X (PAI EDITION) - V9.4 (TRAP UPDATE)
 // ==========================================
 
 const { 
@@ -16,7 +16,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const OWNER_ID = process.env.OWNER_ID; 
 
 const app = express();
-app.get('/', (req, res) => res.send('Z-Gen X Gender Mode is Online! 🔥'));
+app.get('/', (req, res) => res.send('Z-Gen X Trap Mode is Online! 🔥'));
 app.listen(process.env.PORT || 3000);
 
 const client = new Client({
@@ -30,17 +30,17 @@ const commands = [
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
 
-// ตัวแปรเก็บค่าการเลือกเพศของแต่ละคน (ชั่วคราว)
+// ตัวแปรเก็บค่าการเลือกเพศของแต่ละคน
 const userPreferences = {};
 
 client.once('ready', async () => {
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✨ น้องปาย V9.3 พร้อมบริการทั้งชายและหญิงแล้วค่ะ!`);
+        console.log(`✨ น้องปาย V9.4 พร้อมบริการทั้งสาวน้อยและสาวดุ้นแล้วค่ะ!`);
     } catch (e) { console.error(e); }
 });
 
-// --- คลังข้อความเสียว (บอทเป็นคนพูดเชียร์) ---
+// --- คลังข้อความเสียว ---
 const sfwMessages = [
     "✨ งื้อออ... น่ารักมากเลยค่ะตัวเอง!",
     "💖 ดูรูปนี้แล้วใจฟูเลยเนอะ อยากให้ยิ้มเยอะๆ น้า",
@@ -65,7 +65,7 @@ function getRandomMessage(type) {
 
 client.on('interactionCreate', async interaction => {
     
-    // 1. เรียก Panel (เฉพาะซีม่อน/Admin)
+    // 1. เรียก Panel (เฉพาะ Admin/Zimon)
     if (interaction.isChatInputCommand() && interaction.commandName === 'pai_secret') {
         if (interaction.user.id !== OWNER_ID) {
             return interaction.reply({ content: '🚫 เฉพาะแอดมินเท่านั้นที่เรียกแผงควบคุมได้ค่ะ!', ephemeral: true });
@@ -75,8 +75,8 @@ client.on('interactionCreate', async interaction => {
             .setTitle('🔞 Z-GEN X : SPICY GALLERY')
             .setDescription(
                 '**ยินดีต้อนรับสมาชิกทุกท่านค่ะ** 🌹\n' +
-                'ปายอัปเกรดใหม่! เลือกได้แล้วว่าจะดู **สาวสวย** หรือ **หนุ่มน่ารัก**\n\n' +
-                '1️⃣ **เลือกเพศ** ในเมนูด้านล่างก่อน\n' +
+                'ปายอัปเกรดใหม่! เลือกได้ตามรสนิยมเลยค่ะ\n\n' +
+                '1️⃣ **เลือกแนวที่ชอบ** ในเมนูด้านล่างก่อน\n' +
                 '2️⃣ **กดปุ่ม** สีเขียว หรือ สีแดง\n' +
                 '3️⃣ **รับของดี** ใน DM ได้เลย!'
             )
@@ -84,13 +84,13 @@ client.on('interactionCreate', async interaction => {
             .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif')
             .setFooter({ text: 'บริการความสุขโดยน้องปาย 💋' });
 
-        // Dropdown เลือกเพศ
+        // Dropdown เลือกเพศ (แก้คำใหม่ตามสั่ง!)
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('gender_select')
-            .setPlaceholder('🔻 เลือกเพศที่อยากดู (กดเลยจ้า)')
+            .setPlaceholder('🔻 เลือกแนวที่อยากดู (กดเลยจ้า)')
             .addOptions(
                 { label: '🚺 สาวน้อย (Girl)', description: 'สาวสวย นมโต หีฟิต', value: 'waifu', emoji: '🚺' },
-                { label: '🚹 หนุ่มน้อย (Boy)', description: 'หนุ่มหน้าหวาน ดุ้นสวย', value: 'trap', emoji: '🚹' }
+                { label: '⚧️ สาวดุ้น (Trap)', description: 'น่ารักเหมือนผู้หญิง แต่มีดุ้น!', value: 'trap', emoji: '⚧️' }
             );
 
         // ปุ่มกด
@@ -109,12 +109,12 @@ client.on('interactionCreate', async interaction => {
         });
     }
 
-    // 2. ระบบเลือกเพศ (Dropdown)
+    // 2. จำค่าการเลือก (Dropdown)
     if (interaction.isStringSelectMenu() && interaction.customId === 'gender_select') {
         const selected = interaction.values[0];
-        userPreferences[interaction.user.id] = selected; // จำค่าไว้
+        userPreferences[interaction.user.id] = selected; 
         
-        const label = selected === 'waifu' ? '🚺 สาวน้อย' : '🚹 หนุ่มน้อย';
+        const label = selected === 'waifu' ? '🚺 สาวน้อย' : '⚧️ สาวดุ้น';
         await interaction.reply({ content: `✅ ปายจำแล้วค่ะ! ตัวเองเลือกดู **${label}** นะคะ (กดปุ่มสีแดง/เขียวต่อได้เลย)`, ephemeral: true });
     }
 
@@ -136,7 +136,7 @@ client.on('interactionCreate', async interaction => {
         setTimeout(() => channel.delete().catch(() => {}), 3 * 60 * 1000);
     }
 
-    // 4. เปิด Modal ใส่จำนวน
+    // 4. เปิด Modal
     if (interaction.isButton() && (interaction.customId === 'open_sfw' || interaction.customId === 'open_nsfw')) {
         const isNSFW = interaction.customId === 'open_nsfw';
         const modal = new ModalBuilder()
@@ -148,7 +148,7 @@ client.on('interactionCreate', async interaction => {
         await interaction.showModal(modal);
     }
 
-    // 5. ส่งรูป + ข้อความเสียว (ตามเพศที่เลือก)
+    // 5. ส่งรูป + ข้อความ
     if (interaction.isModalSubmit()) {
         await interaction.deferReply({ ephemeral: true });
         
@@ -156,7 +156,7 @@ client.on('interactionCreate', async interaction => {
         let amount = parseInt(interaction.fields.getTextInputValue('amount')) || 1;
         if (amount > 5) amount = 5;
 
-        // ดึงค่าเพศที่เลือกไว้ (ถ้าไม่ได้เลือก ให้ Default เป็น waifu/หญิง)
+        // ดึงค่าเพศ (Default = waifu)
         const category = userPreferences[interaction.user.id] || 'waifu';
         const type = isNSFW ? 'nsfw' : 'sfw';
         
@@ -171,8 +171,6 @@ client.on('interactionCreate', async interaction => {
 
                 if (imgUrl) {
                     const spicyText = getRandomMessage(type);
-                    
-                    // ส่ง DM
                     await interaction.user.send({ 
                         content: `${spicyText}\n${imgUrl}` 
                     }).catch(e => console.log(`DM Fail`));
@@ -181,7 +179,7 @@ client.on('interactionCreate', async interaction => {
             }
 
             if (successCount > 0) {
-                const label = category === 'waifu' ? 'สาวน้อย' : 'หนุ่มน้อย';
+                const label = category === 'waifu' ? 'สาวน้อย' : 'สาวดุ้น';
                 await interaction.editReply(`✅ ส่ง **${label}** จำนวน **${successCount}** รูป เข้า DM แล้วค่ะ!`);
             } else {
                 await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! (กรุณาเปิดรับข้อความจากคนแปลกหน้าใน Server ด้วยน้า)`);

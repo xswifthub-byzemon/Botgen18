@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) - V9.4 (TRAP UPDATE)
+//  Z-GEN X (PAI EDITION) - V9.5 (FIXED CRASH)
 // ==========================================
 
 const { 
@@ -16,7 +16,7 @@ const CLIENT_ID = process.env.CLIENT_ID;
 const OWNER_ID = process.env.OWNER_ID; 
 
 const app = express();
-app.get('/', (req, res) => res.send('Z-Gen X Trap Mode is Online! 🔥'));
+app.get('/', (req, res) => res.send('Z-Gen X Fixed Mode is Online! 🔥'));
 app.listen(process.env.PORT || 3000);
 
 const client = new Client({
@@ -36,7 +36,7 @@ const userPreferences = {};
 client.once('ready', async () => {
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✨ น้องปาย V9.4 พร้อมบริการทั้งสาวน้อยและสาวดุ้นแล้วค่ะ!`);
+        console.log(`✨ น้องปาย V9.5 (Fixed) พร้อมทำงานแล้วค่ะ!`);
     } catch (e) { console.error(e); }
 });
 
@@ -75,8 +75,8 @@ client.on('interactionCreate', async interaction => {
             .setTitle('🔞 Z-GEN X : SPICY GALLERY')
             .setDescription(
                 '**ยินดีต้อนรับสมาชิกทุกท่านค่ะ** 🌹\n' +
-                'ปายอัปเกรดใหม่! เลือกได้ตามรสนิยมเลยค่ะ\n\n' +
-                '1️⃣ **เลือกแนวที่ชอบ** ในเมนูด้านล่างก่อน\n' +
+                'ปายอัปเกรดใหม่! เลือกแนวที่ชอบได้เลย\n\n' +
+                '1️⃣ **เลือกสไตล์** ในเมนูด้านล่าง\n' +
                 '2️⃣ **กดปุ่ม** สีเขียว หรือ สีแดง\n' +
                 '3️⃣ **รับของดี** ใน DM ได้เลย!'
             )
@@ -84,13 +84,14 @@ client.on('interactionCreate', async interaction => {
             .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif')
             .setFooter({ text: 'บริการความสุขโดยน้องปาย 💋' });
 
-        // Dropdown เลือกเพศ (แก้คำใหม่ตามสั่ง!)
+        // Dropdown เลือกเพศ (แก้ไข Emoji ตรงนี้!)
         const selectMenu = new StringSelectMenuBuilder()
             .setCustomId('gender_select')
             .setPlaceholder('🔻 เลือกแนวที่อยากดู (กดเลยจ้า)')
             .addOptions(
-                { label: '🚺 สาวน้อย (Girl)', description: 'สาวสวย นมโต หีฟิต', value: 'waifu', emoji: '🚺' },
-                { label: '⚧️ สาวดุ้น (Trap)', description: 'น่ารักเหมือนผู้หญิง แต่มีดุ้น!', value: 'trap', emoji: '⚧️' }
+                { label: 'สาวน้อย (Girl)', description: 'สาวสวย นมโต หีฟิต', value: 'waifu', emoji: '🚺' },
+                // เปลี่ยน Emoji เป็น 🍆 (มะเขือยาว) เพื่อสื่อถึงดุ้น และไม่บัคแน่นอน
+                { label: 'สาวดุ้น (Trap)', description: 'น่ารักเหมือนผู้หญิง แต่มีดุ้น!', value: 'trap', emoji: '🍆' }
             );
 
         // ปุ่มกด
@@ -109,19 +110,22 @@ client.on('interactionCreate', async interaction => {
         });
     }
 
-    // 2. จำค่าการเลือก (Dropdown)
+    // 2. จำค่าการเลือก
     if (interaction.isStringSelectMenu() && interaction.customId === 'gender_select') {
         const selected = interaction.values[0];
         userPreferences[interaction.user.id] = selected; 
         
-        const label = selected === 'waifu' ? '🚺 สาวน้อย' : '⚧️ สาวดุ้น';
+        const label = selected === 'waifu' ? '🚺 สาวน้อย' : '🍆 สาวดุ้น';
         await interaction.reply({ content: `✅ ปายจำแล้วค่ะ! ตัวเองเลือกดู **${label}** นะคะ (กดปุ่มสีแดง/เขียวต่อได้เลย)`, ephemeral: true });
     }
 
     // 3. ปุ่มดูรายชื่อ
     if (interaction.isButton() && interaction.customId === 'open_list') {
         await interaction.deferReply({ ephemeral: true });
-        const channelName = `anime-list-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+        // สร้างชื่อห้องแบบปลอดภัย (ลบอักขระพิเศษออก)
+        const safeName = interaction.user.username.replace(/[^a-zA-Z0-9]/g, '').toLowerCase() || 'user';
+        const channelName = `anime-list-${safeName}`;
+        
         const channel = await interaction.guild.channels.create({
             name: channelName,
             type: ChannelType.GuildText,

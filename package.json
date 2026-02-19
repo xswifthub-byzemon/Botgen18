@@ -1,7 +1,7 @@
 {
   "name": "z-gen-x-bot",
-  "version": "6.1.0",
-  "description": "Zimon Anime Bot Fix",
+  "version": "6.2.0",
+  "description": "Zimon Bot Final Fix",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

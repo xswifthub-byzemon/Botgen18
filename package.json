@@ -1,7 +1,7 @@
 {
   "name": "z-gen-x-bot",
-  "version": "8.0.0",
-  "description": "Zimon Waifu Random Bot",
+  "version": "9.5.0",
+  "description": "Zimon Bot Fixed",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"

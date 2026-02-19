@@ -1,5 +1,5 @@
 // ==========================================
-//  Z-GEN X (PAI EDITION) - V8.0 (WAIFU RANDOM)
+//  Z-GEN X (PAI EDITION) - V9.2 (PUBLIC SPICY)
 // ==========================================
 
 const { 
@@ -12,10 +12,10 @@ const express = require('express');
 
 const TOKEN = process.env.TOKEN; 
 const CLIENT_ID = process.env.CLIENT_ID; 
-const OWNER_ID = process.env.OWNER_ID; 
+const OWNER_ID = process.env.OWNER_ID; // ใช้เช็คสิทธิ์ตอนพิมพ์คำสั่ง
 
 const app = express();
-app.get('/', (req, res) => res.send('Z-Gen X Waifu Random is Online! 💖'));
+app.get('/', (req, res) => res.send('Z-Gen X Public Service Online! 🔥'));
 app.listen(process.env.PORT || 3000);
 
 const client = new Client({
@@ -24,7 +24,7 @@ const client = new Client({
 });
 
 const commands = [
-    new SlashCommandBuilder().setName('pai_secret').setDescription('เรียกแผงควบคุม Z-Gen X')
+    new SlashCommandBuilder().setName('pai_secret').setDescription('เรียกแผงควบคุม Z-Gen X (Admin Only)')
 ].map(command => command.toJSON());
 
 const rest = new REST({ version: '10' }).setToken(TOKEN);
@@ -32,80 +32,103 @@ const rest = new REST({ version: '10' }).setToken(TOKEN);
 client.once('ready', async () => {
     try {
         await rest.put(Routes.applicationCommands(CLIENT_ID), { body: commands });
-        console.log(`✨ น้องปาย V8.0 (Waifu Random) พร้อมสุ่มของดีแล้วค่ะ!`);
+        console.log(`✨ น้องปาย V9.2 พร้อมบริการความเสียวให้ทุกคนแล้วค่ะ!`);
     } catch (e) { console.error(e); }
 });
 
+// --- คลังข้อความ (แบบ General ใช้ได้กับทุกคน) ---
+const sfwMessages = [
+    "✨ รูปนี้น่ารักไหมคะ? ดูแล้วใจฟูเลยเนอะ!",
+    "💖 น้องคนนี้น่ารักจังเลยค่ะ อยากให้ยิ้มเยอะๆ น้า",
+    "🎀 ส่งความสดใสให้คนเก่งของปายค่ะ~",
+    "🥰 รูปสวยๆ มาเสิร์ฟแล้วค่าา ขอให้วันนี้เป็นวันที่ดีน้า",
+    "🌸 ดูรูปนี้แล้วหายเหนื่อยไหมคะ? สู้ๆ นะคะคนเก่ง!"
+];
+
+const nsfwMessages = [
+    "😈 ได้รูปเสียวๆ ไปแล้ว... ต้องชักว่าวด้วยนะคะคนดี~",
+    "🔥 หูยยย... นมใหญ่ หีฟิตขนาดนี้ ไหวหรอคะ? ระวังน้ำแตกคามือน้า",
+    "🔞 ถ้าดูรูปนี้แล้วเงี่ยน... ก็เอามือชักให้หนูดูหน่อยสิคะ",
+    "💦 รูปนี้เด็ดมาก! ต้องแตกใส่หน้าจอแน่ๆ เลย อิอิ",
+    "👅 เห็นแล้วอยากเลียจังเลยค่ะ... ตัวเองก็อยากใช่ไหมล่ะ?",
+    "💋 คืนนี้ยาวไปนะคะที่รัก... จัดให้หนักๆ เลยน้าาา หนูรอดูน้ำอยู่"
+];
+
+function getRandomMessage(type) {
+    const list = type === 'nsfw' ? nsfwMessages : sfwMessages;
+    return list[Math.floor(Math.random() * list.length)];
+}
+
 client.on('interactionCreate', async interaction => {
     
-    // --- 1. หน้า Panel หลัก ---
+    // ====================================================
+    // 🟢 1. เรียก Panel (เฉพาะซีม่อน/Admin เท่านั้น!)
+    // ====================================================
     if (interaction.isChatInputCommand() && interaction.commandName === 'pai_secret') {
-        if (interaction.user.id !== OWNER_ID) return interaction.reply({ content: '🚫 เฉพาะซีม่อนเท่านั้น!', ephemeral: true });
+        // เช็คสิทธิ์: ถ้าไม่ใช่ Owner ห้ามเรียก Panel
+        if (interaction.user.id !== OWNER_ID) {
+            return interaction.reply({ content: '🚫 เฉพาะแอดมินเท่านั้นที่เรียกแผงควบคุมได้ค่ะ!', ephemeral: true });
+        }
         
+        // ข้อความใน Panel ปรับเป็นกลางๆ ต้อนรับทุกคน
         const embed = new EmbedBuilder()
-            .setTitle('🔞 Z-GEN X : RANDOM GALLERY')
+            .setTitle('🔞 Z-GEN X : SPICY GALLERY')
             .setDescription(
-                '🌹 **ยินดีต้อนรับค่ะ ซีม่อน**\n' +
-                'ปายกลับมาใช้ระบบ "สุ่มรูป" ด้วย API เดิมที่ส่ง DM ได้ชัวร์ๆ แล้วค่ะ!\n\n' +
-                '✨ **วิธีใช้**\n' +
-                '1. กดปุ่มเลือกโหมด (น่ารัก/สยิว)\n' +
-                '2. ใส่จำนวนรูปที่ต้องการ (1-5)\n' +
-                '3. รอรับรูปใน DM ทันที (ไม่ต้องพิมพ์ชื่อ)'
+                '**ยินดีต้อนรับสมาชิกทุกท่านค่ะ** 🌹\n' +
+                'ปายเตรียมรูปเด็ดๆ พร้อมข้อความเสียวๆ ไว้บริการแล้ว!\n' +
+                'ใครอยากได้ของดีเข้า DM เตรียมทิชชู่แล้วกดปุ่มเลยค่ะ 👇'
             )
             .setColor('#FF0099')
             .setImage('https://media1.tenor.com/m/XjC4J4_Z_jUAAAAC/anime-girl.gif')
-            .setFooter({ text: 'Service by น้องปาย' });
+            .setFooter({ text: 'บริการความสุขโดยน้องปาย 💋' });
 
         const row = new ActionRowBuilder().addComponents(
-            new ButtonBuilder().setCustomId('open_sfw').setLabel('สุ่มน่ารัก (SFW)').setStyle(ButtonStyle.Success).setEmoji('🎀'),
-            new ButtonBuilder().setCustomId('open_nsfw').setLabel('สุ่มสยิว (NSFW)').setStyle(ButtonStyle.Danger).setEmoji('🔥'),
-            new ButtonBuilder().setCustomId('open_list').setLabel('ดูรายชื่อ (แนะนำ)').setStyle(ButtonStyle.Secondary).setEmoji('📖')
+            new ButtonBuilder().setCustomId('open_sfw').setLabel('น่ารัก (SFW)').setStyle(ButtonStyle.Success).setEmoji('🎀'),
+            new ButtonBuilder().setCustomId('open_nsfw').setLabel('สยิว (NSFW)').setStyle(ButtonStyle.Danger).setEmoji('🔥'),
+            new ButtonBuilder().setCustomId('open_list').setLabel('รายชื่อ (แนะนำ)').setStyle(ButtonStyle.Secondary).setEmoji('📖')
         );
 
         await interaction.reply({ embeds: [embed], components: [row] });
     }
 
-    // --- 2. ปุ่มดูรายชื่อ (กดเล่นๆ) ---
+    // ====================================================
+    // 🟡 2. ส่วนที่ "สมาชิกทั่วไป" กดใช้งานได้ (Buttons & Modals)
+    // ====================================================
+
+    // --- ปุ่มดูรายชื่อ ---
     if (interaction.isButton() && interaction.customId === 'open_list') {
         await interaction.deferReply({ ephemeral: true });
+        
+        // สร้างชื่อห้องตามชื่อคนกด (จะได้ไม่ซ้ำกัน)
+        const channelName = `anime-list-${interaction.user.username}`.toLowerCase().replace(/[^a-z0-9]/g, '');
+        
         const channel = await interaction.guild.channels.create({
-            name: `anime-list`,
+            name: channelName,
             type: ChannelType.GuildText,
             permissionOverwrites: [
-                { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] },
-                { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel] }
+                { id: interaction.guild.id, deny: [PermissionFlagsBits.ViewChannel] }, // คนอื่นไม่เห็น
+                { id: interaction.user.id, allow: [PermissionFlagsBits.ViewChannel] }  // คนกดเห็น
             ],
         });
-        const listEmbed = new EmbedBuilder()
-            .setTitle('📖 ตัวอย่างอนิเมะที่มีในระบบสุ่ม')
-            .setDescription('**ระบบจะสุ่มจากเรื่องดังๆ เหล่านี้ให้เองค่ะ:**\nOne Piece, Demon Slayer, Naruto, Dragon Ball, Re:Zero, Chainsaw Man และอีกเพียบ!')
-            .setColor('#00FFFF')
-            .setFooter({ text: 'ห้องนี้จะลบใน 3 นาที' });
+        const listEmbed = new EmbedBuilder().setTitle('📖 ตัวอย่างอนิเมะในระบบสุ่ม').setDescription('One Piece, Demon Slayer, Naruto, Dragon Ball, Re:Zero, etc.').setColor('#00FFFF').setFooter({ text: 'ห้องนี้จะลบใน 3 นาที' });
         await channel.send({ content: `<@${interaction.user.id}>`, embeds: [listEmbed] });
-        await interaction.editReply(`✅ สร้างห้องดูชื่อแล้วที่ <#${channel.id}> ค่ะ`);
+        await interaction.editReply(`✅ สร้างห้องดูชื่อส่วนตัวให้แล้วที่ <#${channel.id}> ค่ะ`);
         setTimeout(() => channel.delete().catch(() => {}), 3 * 60 * 1000);
     }
 
-    // --- 3. เปิด Modal (ใส่จำนวนอย่างเดียว) ---
+    // --- เปิด Modal ใส่จำนวน ---
     if (interaction.isButton() && (interaction.customId === 'open_sfw' || interaction.customId === 'open_nsfw')) {
         const isNSFW = interaction.customId === 'open_nsfw';
         const modal = new ModalBuilder()
             .setCustomId(isNSFW ? 'modal_nsfw' : 'modal_sfw')
             .setTitle(isNSFW ? '🔞 สุ่มแบบ 18+' : '✨ สุ่มแบบปกติ');
 
-        // ใส่แค่ช่องจำนวนตามที่ซีม่อนสั่ง
-        const numInput = new TextInputBuilder()
-            .setCustomId('amount')
-            .setLabel('จำนวนรูปที่ต้องการ (1-5)')
-            .setValue('5')
-            .setStyle(TextInputStyle.Short)
-            .setRequired(true);
-
+        const numInput = new TextInputBuilder().setCustomId('amount').setLabel('จำนวนรูป (1-5)').setValue('5').setStyle(TextInputStyle.Short).setRequired(true);
         modal.addComponents(new ActionRowBuilder().addComponents(numInput));
         await interaction.showModal(modal);
     }
 
-    // --- 4. ประมวลผลและส่ง DM (ใช้ waifu.pics) ---
+    // --- ส่งรูป + ข้อความเสียว (เข้า DM คนกด) ---
     if (interaction.isModalSubmit()) {
         await interaction.deferReply({ ephemeral: true });
         
@@ -113,37 +136,37 @@ client.on('interactionCreate', async interaction => {
         let amount = parseInt(interaction.fields.getTextInputValue('amount')) || 1;
         if (amount > 5) amount = 5;
 
-        // API ของ Waifu.pics (ตัวที่เคยส่งได้)
         const type = isNSFW ? 'nsfw' : 'sfw';
-        const category = 'waifu'; // หมวดหมู่มาตรฐาน
+        const category = 'waifu'; 
         const url = `https://api.waifu.pics/${type}/${category}`;
 
         try {
             let successCount = 0;
             
-            // วนลูปตามจำนวนที่ขอ
             for (let i = 0; i < amount; i++) {
                 const res = await axios.get(url);
                 const imgUrl = res.data.url;
 
                 if (imgUrl) {
-                    // ส่งแบบ Link ตรงๆ (Discord ไม่บล็อกแน่นอน)
+                    // สุ่มข้อความ (แบบ General)
+                    const spicyText = getRandomMessage(type);
+                    
                     await interaction.user.send({ 
-                        content: `**${isNSFW ? '🔥' : '🎀'} รูปที่ ${i+1}**\n${imgUrl}` 
-                    }).catch(e => console.log('DM Fail'));
+                        content: `${spicyText}\n${imgUrl}` 
+                    }).catch(e => console.log(`DM Fail for ${interaction.user.tag}`));
                     successCount++;
                 }
             }
 
             if (successCount > 0) {
-                await interaction.editReply(`✅ สุ่มสาวๆ จำนวน **${successCount}** รูป ส่งเข้า DM เรียบร้อยแล้วค่ะ!`);
+                await interaction.editReply(`✅ ส่งของดีจำนวน **${successCount}** รูป เข้า DM แล้วค่ะ! (อย่าลืมเช็คข้อความน้า)`);
             } else {
-                await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! (เช็คการตั้งค่า Privacy ของ Discord ด้วยน้า)`);
+                await interaction.editReply(`❌ ส่ง DM ไม่ไปค่ะ! \n⚠️ **วิธีแก้:** ไปที่ ตั้งค่า (User Settings) -> Privacy & Safety -> เปิด "Allow direct messages from server members"`);
             }
 
         } catch (error) {
             console.error(error);
-            await interaction.editReply(`😭 เกิดข้อผิดพลาด: ${error.message}`);
+            await interaction.editReply(`😭 ระบบขัดข้องชั่วคราว: ${error.message}`);
         }
     }
 });
